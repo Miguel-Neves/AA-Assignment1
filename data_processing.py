@@ -1,8 +1,8 @@
-# Import relevant libraries
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
+import matplotlib.pyplot as plt
 
 data = pd.read_csv("cleveland.data", header=None)
 
@@ -45,3 +45,28 @@ data_test = pd.DataFrame(np.append(X_test, y_test, axis=1))
 data_train.to_csv("data_train.data", header=False, index=False)
 data_val.to_csv("data_val.data", header=False, index=False)
 data_test.to_csv("data_test.data", header=False, index=False)
+
+
+#   - - - PLOT DATA - - -   #
+pos = (y == 1)
+neg = (y == 0)
+
+xlabels = ["Age", "Sex", "Resting blood pressure (mmHg)", "Serum cholesterol (mg/dL)",
+           "Fasting blood sugar (>120 mg/dL)", "Maximum heart rate achieved during exercise (bpm)",
+           "Exercise induced angina", "ST depression induced by exercise relative to rest",
+           "Chest pain type: typical angina", "Chest pain type: atypical angina", "Chest pain type: non-anginal pain",
+           "Chest pain type: asymptomatic", "Resting electrocardiographic results: normal",
+           "Resting electrocardiographic results: having ST-T wave abnormality",
+           "Resting electrocardiographic results: left ventricular hypertrophy",
+           "The slope of the peak exercise ST segment: upsloping", "The slope of the peak exercise ST segment: flat",
+           "The slope of the peak exercise ST segment: downsloping",
+           "Number of major vessels  colored by flourosopy: 0", "Number of major vessels  colored by flourosopy: 1",
+           "Number of major vessels  colored by flourosopy: 2", "Number of major vessels  colored by flourosopy: 3",
+           "Thalassemia: normal", "Thalassemia: fixed defect", "Thalassemia: reversable defect"]
+
+for f in range(len(X[0])):
+    plt.hist([X[neg[:, 0], f], X[pos[:, 0], f]])
+    plt.xlabel(xlabels[f])
+    plt.ylabel("Number of patients")
+    plt.legend(["No heart disease", "Heart disease"])
+    plt.show()
