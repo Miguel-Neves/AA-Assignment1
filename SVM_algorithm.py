@@ -4,36 +4,53 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
+from sklearn.svm import SVC
+def dataset3Params(X, y, Xval, yval,vals):
+    """
+    dataset3Params returns the optimal C and gamma(1/sigma) based on a cross-validation set.
+    """
+    acc = 0
+    best_C = 0
+    best_gamma = 0
+    for i in vals:
+        C= i
+        for j in vals:
+            gamma = 1/j
+            classifier = SVC(C=C, gamma=gamma)
+            classifier.fit(X, y)
+            prediction = classifier.predict(Xval)
+            score = classifier.score(Xval, yval)
+            print("C= ",C,", sigma= ",j,", score= ",score)
+            if score > acc:
+                acc = score
+                best_C = C
+                best_gamma = gamma
+    return best_C, best_gamma
 
-data = pd.read_csv("cleveland.data", header=None)
 
-y = data.values[:, 13]
-y = y.reshape((len(y), 1))
-# change the output to a binary classification
-y = np.where(y > 0, 1, 0)  # presence (values 1,2,3,4); absence (value 0)
-data = data.drop(columns=[13], axis=1)
+data_train = pd.read_csv("data_train.data", header=None)
+data_val = pd.read_csv("data_val.data", header=None)
+data_test = pd.read_csv("data_test.data", header=None)
 
-# using One Hot Encoding for some columns (because they have only a few unique values)
-data = pd.get_dummies(data, columns=[2, 6, 10, 11, 12])
-# print(data.head())
+X_train = data_train.values[:, :-1]
+y_train = data_train.values[:, 25]
+X_val = data_val.values[:, :-1]
+y_val = data_val.values[:, 25]
+X_test = data_test.values[:, :-1]
+y_test = data_test.values[:, 25]
 
-X = data.values
-# print(X.shape)
-# print(y.shape)
+vals = [0.001, 0.01, 0.03, 0.1, 0.3, 1, 3, 10, 30, 50, 70]
+best_C, best_gamma = dataset3Params(X_train, y_train.ravel(), X_val, y_val.ravel(), vals)
 
-# restructure the header
-# data.columns = [i for i in range(len(data.columns))]
-# print(data.head())
+#What are the best C and sigma ?
+print("Best C: ",best_C)
+print("Best sigma: ",1/best_gamma)
 
-# scaling the data to not overfit to the wrong features
-sc = MinMaxScaler()
-X_norm = sc.fit_transform(X)
-print(X_norm)
+#Build an SVM classifier with the best C and gamma and get classifier score of about 95% ?
+classifier = SVC(C=best_C,gamma=best_gamma, kernel="linear")#, kernel="poly", degree=3, coef0=10.0)
+classifier.fit(X_train,np.ravel(y_train))
+print(float(classifier.score(X_train,y_train)))
 
-# split the data into 3 parts: training(60%), cross validation(20%) and test(20%)
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.4)
-X_test, X_val, y_test, y_val = train_test_split(X_test, y_test, test_size=0.5)
 
-print(X_train.shape)
-print(X_test.shape)
-print(X_val.shape)
+def learning_curve():
+    pass
