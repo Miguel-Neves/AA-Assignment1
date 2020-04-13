@@ -67,26 +67,6 @@ def validationCurve(Xtrain, ytrain, Xval, yval, learn_rate, num_iter, Lambda_arr
     return error_train, error_val
 
 
-#   - - - LOAD DATA - - -   #
-data_train = pd.read_csv("data_train.data", header=None)
-data_val = pd.read_csv("data_val.data", header=None)
-data_test = pd.read_csv("data_test.data", header=None)
-
-X_train = data_train.values[:, :-1]
-y_train = data_train.values[:, 25]
-X_val = data_val.values[:, :-1]
-y_val = data_val.values[:, 25]
-X_test = data_test.values[:, :-1]
-y_test = data_test.values[:, 25]
-
-y_train = y_train.reshape((len(y_train), 1))
-y_val = y_val.reshape((len(y_val), 1))
-y_test = y_test.reshape((len(y_test), 1))
-
-#   - - - TESTS - - -   #
-Lambda_values = [0.001, 0.01, 0.1, 1, 3, 5, 10]
-alpha = 0.5
-num_iter = 10000
 """
 for l in Lambda_values:
     theta, J_history = gradientDescent(X_train, y_train, initial_theta, alpha, num_iter, l)
@@ -102,6 +82,9 @@ plt.show()
 
 
 def logreg_algorithm(X_train, y_train, X_val, y_val, alpha, num_iter, Lambda_values):
+    y_train = y_train.reshape((len(y_train), 1))
+    y_val = y_val.reshape((len(y_val), 1))
+
     error_train, error_val = validationCurve(X_train, y_train, X_val, y_val, alpha, num_iter, Lambda_values)
     plt.plot(Lambda_values, error_train, label="Train")
     plt.plot(Lambda_values, error_val, label="Cross Validation", color="r")
@@ -120,7 +103,7 @@ def logreg_algorithm(X_train, y_train, X_val, y_val, alpha, num_iter, Lambda_val
     best_lambda = Lambda_values[index]
     best_error_val = error_val[index]
     print("Best Lambda:", best_lambda)
-    print("Validation error:", best_error_val)
+    print("Error:", best_error_val)
 
     # Calculate accuracy, precision, sensitivity and f1 score for the best lambda value
     initial_theta = np.zeros((X_train.shape[1], 1))
@@ -130,3 +113,5 @@ def logreg_algorithm(X_train, y_train, X_val, y_val, alpha, num_iter, Lambda_val
     print("Precision:", round(metrics.precision_score(y_val, pred_val)*100, 1), "%")
     print("Sensitivity (recall):", round(metrics.recall_score(y_val, pred_val)*100, 1), "%")
     print("F1 Score:", round(metrics.f1_score(y_val, pred_val)*100, 1), "%")
+
+    return best_error_val, best_lambda

@@ -1,56 +1,57 @@
-# Import relevant libraries
 import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import MinMaxScaler
+from sklearn import metrics
 from sklearn.svm import SVC
-def dataset3Params(X, y, Xval, yval,vals):
-    """
-    dataset3Params returns the optimal C and gamma(1/sigma) based on a cross-validation set.
-    """
-    acc = 0
-    best_C = 0
-    best_gamma = 0
-    for i in vals:
-        C= i
-        for j in vals:
-            gamma = 1/j
-            classifier = SVC(C=C, gamma=gamma)
-            classifier.fit(X, y)
-            prediction = classifier.predict(Xval)
-            score = classifier.score(Xval, yval)
-            print("C= ",C,", sigma= ",j,", score= ",score)
-            if score > acc:
-                acc = score
-                best_C = C
-                best_gamma = gamma
-    return best_C, best_gamma
 
 
-data_train = pd.read_csv("data_train.data", header=None)
-data_val = pd.read_csv("data_val.data", header=None)
-data_test = pd.read_csv("data_test.data", header=None)
+def validation_curve(Xtrain, ytrain, Xval, yval, C_vals, sigma_vals, kernel):
 
-X_train = data_train.values[:, :-1]
-y_train = data_train.values[:, 25]
-X_val = data_val.values[:, :-1]
-y_val = data_val.values[:, 25]
-X_test = data_test.values[:, :-1]
-y_test = data_test.values[:, 25]
+    values, error_train, error_val = [], [], []
+    m_train = Xtrain.shape[0]
+    m_val = Xval.shape[0]
 
-vals = [0.001, 0.01, 0.03, 0.1, 0.3, 1, 3, 10, 30, 50, 70]
-best_C, best_gamma = dataset3Params(X_train, y_train.ravel(), X_val, y_val.ravel(), vals)
+    for i in C_vals:
+        C = i
+        for j in sigma_vals:
+            gamma = 1 / j
+            for k in kernel:
+                classifier = SVC(C=C, gamma=gamma, kernel=k, coef0=10.0)
+                classifier.fit(Xtrain, ytrain)
 
-#What are the best C and sigma ?
-print("Best C: ",best_C)
-print("Best sigma: ",1/best_gamma)
+                # predicting the output for training and validation sets
+                pred_train = classifier.predict(Xtrain)
+                pred_val = classifier.predict(Xval)
 
-#Build an SVM classifier with the best C and gamma and get classifier score of about 95% ?
-classifier = SVC(C=best_C,gamma=best_gamma, kernel="linear")#, kernel="poly", degree=3, coef0=10.0)
-classifier.fit(X_train,np.ravel(y_train))
-print(float(classifier.score(X_train,y_train)))
+                # computing the error
+                error_train.append(1/(2*m_train) * np.sum((pred_train - ytrain)**2))
+                error_val.append(1/(2 * m_val) * np.sum((pred_val - yval) ** 2))
+                values.append((i, gamma, k))  # (C, gamma, kernel)
+                # print("(C, gamma, kernel) = ", (i,gamma,k))
+                # print("Error val: ", 1/(2 * m_val) * np.sum((pred_val - yval) ** 2))
+
+    return values, error_train, error_val
 
 
-def learning_curve():
-    pass
+def svm_algorithm(X_train, y_train, X_val, y_val, C_vals, sigma_vals, kernel_vals):
+    print(" - SVM algorithm - ")
+    print("C values:", C_vals)
+    print("sigma values:", sigma_vals)
+    print("kernel values:", kernel_vals)
+
+    values, error_train, error_val = validation_curve(X_train, y_train.ravel(), X_val, y_val.ravel(), C_vals, sigma_vals, kernel_vals)
+
+    index = np.argmin(error_val).min()
+    best_C, best_gamma, best_kernel = values[index]
+
+    print("\tResults")
+    print("Best values: C=", best_C, " sigma=", 1/best_gamma, " kernel=", best_kernel)
+    print("Error: ", error_val[index])
+
+    classifier = SVC(C=best_C, gamma=best_gamma, kernel=best_kernel, coef0=10.0)
+    classifier.fit(X_train, y_train)
+
+    pred_val = classifier.predict(X_val)
+    print("Accuracy:", round(metrics.accuracy_score(y_val, pred_val)*100, 1), "%")
+    print("Precision:", round(metrics.precision_score(y_val, pred_val)*100, 1), "%")
+    print("Sensitivity (recall):", round(metrics.recall_score(y_val, pred_val)*100, 1), "%")
+    print("F1 score:", round(metrics.f1_score(y_val, pred_val)*100, 1), "%")
+    return error_val[index], values[index]
