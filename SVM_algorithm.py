@@ -54,4 +54,8 @@ def svm_algorithm(X_train, y_train, X_val, y_val, C_vals, sigma_vals, kernel_val
     print("Precision:", round(metrics.precision_score(y_val, pred_val)*100, 1), "%")
     print("Sensitivity (recall):", round(metrics.recall_score(y_val, pred_val)*100, 1), "%")
     print("F1 score:", round(metrics.f1_score(y_val, pred_val)*100, 1), "%")
+    print("Confusion matrix:\n", metrics.confusion_matrix(y_val, pred_val))
+    # TN FP
+    # FN TP
+
     return error_val[index], values[index]

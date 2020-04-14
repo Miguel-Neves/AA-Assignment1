@@ -67,23 +67,22 @@ def validationCurve(Xtrain, ytrain, Xval, yval, learn_rate, num_iter, Lambda_arr
     return error_train, error_val
 
 
-"""
-for l in Lambda_values:
-    theta, J_history = gradientDescent(X_train, y_train, initial_theta, alpha, num_iter, l)
-    plt.plot(J_history)
-    predictions = np.where(np.dot(X_val, theta) > 0, 1, 0)
-    accuracy = np.where(np.equal(predictions, y_test), 1, 0)
-    print("Lambda:", l, "Cost:", round(J_history[-1], 3), "Train Accuracy:", sum(accuracy)[0]/len(accuracy), "%")
-plt.xlabel("Iteration")
-plt.ylabel("$j(\Theta)$")
-plt.legend(Lambda)
-plt.show()
-"""
-
-
 def logreg_algorithm(X_train, y_train, X_val, y_val, alpha, num_iter, Lambda_values):
     y_train = y_train.reshape((len(y_train), 1))
     y_val = y_val.reshape((len(y_val), 1))
+    initial_theta = np.zeros((X_train.shape[1], 1))
+
+    # calculate and plot the cost function trajectory
+    """
+    for l in Lambda_values:
+        J_history = gradientDescent(X_train, y_train, initial_theta, alpha, num_iter, l)[1]
+        plt.plot(J_history)
+        # print("Lambda:", l, "Cost:", round(J_history[-1], 3))
+    plt.xlabel("Iteration")
+    plt.ylabel("$j(\Theta)$")
+    plt.legend(Lambda_values)
+    plt.show()
+    """
 
     error_train, error_val = validationCurve(X_train, y_train, X_val, y_val, alpha, num_iter, Lambda_values)
     plt.plot(Lambda_values, error_train, label="Train")
@@ -106,12 +105,14 @@ def logreg_algorithm(X_train, y_train, X_val, y_val, alpha, num_iter, Lambda_val
     print("Error:", best_error_val)
 
     # Calculate accuracy, precision, sensitivity and f1 score for the best lambda value
-    initial_theta = np.zeros((X_train.shape[1], 1))
     theta = gradientDescent(X_train, y_train, initial_theta, alpha, num_iter, best_lambda)[0]
     pred_val = np.where(np.dot(X_val, theta) > 0, 1, 0)
     print("Accuracy:", round(metrics.accuracy_score(y_val, pred_val)*100, 1), "%")
     print("Precision:", round(metrics.precision_score(y_val, pred_val)*100, 1), "%")
     print("Sensitivity (recall):", round(metrics.recall_score(y_val, pred_val)*100, 1), "%")
     print("F1 Score:", round(metrics.f1_score(y_val, pred_val)*100, 1), "%")
+    print("Confusion matrix:\n", metrics.confusion_matrix(y_val, pred_val))
+    # TN FP
+    # FN TP
 
     return best_error_val, best_lambda
